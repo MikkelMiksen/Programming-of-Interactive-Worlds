@@ -10,12 +10,13 @@ public struct SeasonTemperature
     public float avgLow;
 }
 
-public class daynightcycle : MonoBehaviour
+public class DayNightCycle : MonoBehaviour
 {
+
     [Header("Read Temperature")]
     public float temp;
 
-    public static daynightcycle Instance; void Awake() { Instance = this; }
+    public static DayNightCycle Instance; void Awake() { Instance = this; }
 
     [Header("Time attributes")]
     [SerializeField]
@@ -33,7 +34,7 @@ public class daynightcycle : MonoBehaviour
     [SerializeField]
     private AnimationCurve lightChangeCurve;
 
-    private DateTime currentTime;
+    public DateTime currentTime;
 
     private TimeSpan sunriseTime, sunsetTime;
 
@@ -77,7 +78,7 @@ public class daynightcycle : MonoBehaviour
         currentTime = currentTime.AddSeconds(Time.deltaTime * timeMultiplier);
 
         if (timeText != null)
-            timeText.text = currentTime.ToString("d/M/yyyy-HH:mm:ss");
+            timeText.text = currentTime.ToString("d/M/yyyy-HH:mm");
     }
 
     private void UpdateLightSettings()
@@ -112,8 +113,6 @@ public class daynightcycle : MonoBehaviour
         //currentTemperature += UnityEngine.Random.Range(-0.5f, 0.5f);
     }
 
-
-
     private void RotateSun()
     {
         float sunLightRotation;
@@ -138,8 +137,6 @@ public class daynightcycle : MonoBehaviour
 
         sunLight.transform.rotation = Quaternion.AngleAxis(sunLightRotation, Vector3.right);
     }
-
-
 
     private TimeSpan CalculateTimeDifference(TimeSpan fromTime, TimeSpan toTime)
     {
@@ -178,5 +175,4 @@ public class daynightcycle : MonoBehaviour
             return (float)(currentTime.DayOfYear / 365f);
         }
     }
-
 }

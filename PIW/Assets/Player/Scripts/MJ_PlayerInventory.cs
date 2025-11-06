@@ -1,38 +1,154 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+
+[System.Serializable]
+public class InventorySlot
+{
+    public ResourceType type;
+    public int amount;
+
+    public bool IsEmpty => amount <= 0;
+    public bool IsFull => amount >= 128;
+
+    public InventorySlot(ResourceType type, int amount)
+    {
+        this.type = type;
+        this.amount = amount;
+    }
+}
 
 public class MJ_PlayerInventory : MonoBehaviour
 {
-    public static MJ_PlayerInventory Instance { get; private set; }
+    public static MJ_PlayerInventory Instance;
 
-    [SerializeField]
-    private Dictionary<ResourceType, int> resources = new Dictionary<ResourceType, int>();
+    [SerializeField] private List<InventorySlot> resources = new List<InventorySlot>();
 
-    [SerializeField]
-    private TextMeshProUGUI inventoryUItext;
+
+    [SerializeField] private List<Image> images = new List<Image>();
+
+    [SerializeField] private List<TextMeshProUGUI> inventoryNumberDisplay = new List<TextMeshProUGUI>();
+
+    [SerializeField] GameObject inventoryGlobalLayout;
+
+    [SerializeField] private Sprite woodSprite, stoneSprite, metalSprite, coalSprite, waterSprite, dieselSprite;
+    private int numOfInventorySlots = 88;
 
     void Awake()
     {
             Instance = this;
     }
 
+    IEnumerator Start()
+    {
+        yield return new WaitForSeconds(.1f);
+        foreach (var theImage in inventoryGlobalLayout.GetComponentsInChildren<Image>())
+        {
+            images.Add(theImage);
+
+        }
+        yield return new WaitForSeconds(.1f);
+        foreach (var text in inventoryGlobalLayout.GetComponentsInChildren<TextMeshProUGUI>())
+        {
+            inventoryNumberDisplay.Add(text);
+        }
+    }
+
     public void AddResource(ResourceType type, int amount)
     {
-        if (!resources.ContainsKey(type))
-            resources[type] = 0;
-        resources[type] += amount;
+        int remaining = amount;
 
-        Debug.Log($"Added {amount} {type}. Total: {resources[type]}");
+        // Fill existing stacks first
+        foreach (var slot in resources)
+        {
+            if (slot.type == type && !slot.IsFull)
+            {
+                int space = 128 - slot.amount;
+                int toAdd = Mathf.Min(space, remaining);
+                slot.amount += toAdd;
+                remaining -= toAdd;
+                if (remaining <= 0)
+                {
+                    AutoSortInventory();
+                    UpdateResourcesUIText();
+                    return;
+                }
+            }
+        }
+
+        // Create new stacks
+        while (remaining > 0 && resources.Count < numOfInventorySlots)
+        {
+            int toAdd = Mathf.Min(128, remaining);
+            resources.Add(new InventorySlot(type, toAdd));
+            remaining -= toAdd;
+        }
+
+        if (remaining > 0)
+            Debug.LogWarning($"❌ Inventory full! Could not add remaining {remaining}x {type}");
+
+        AutoSortInventory();
+        UpdateResourcesUIText();
+    }
+
+
+    private void MergeStacks(ResourceType type)
+    {
+        for (int i = 0; i < resources.Count; i++)
+        {
+            if (resources[i].type != type || resources[i].IsFull)
+                continue;
+
+            for (int j = i + 1; j < resources.Count; j++)
+            {
+                if (resources[j].type == type && !resources[j].IsEmpty)
+                {
+                    int space = 128 - resources[i].amount;
+                    int transfer = Mathf.Min(space, resources[j].amount);
+
+                    resources[i].amount += transfer;
+                    resources[j].amount -= transfer;
+
+                    if (resources[i].IsFull)
+                        break;
+                }
+            }
+        }
+
+        // remove any now-empty slots
+        resources.RemoveAll(s => s.IsEmpty);
     }
 
     public bool RemoveResource(ResourceType type, int amount)
     {
-        if (!resources.ContainsKey(type) || resources[type] < amount)
+        int totalAvailable = GetResourceAmount(type);
+        if (totalAvailable < amount)
+        {
+            Debug.Log($"❌ Not enough {type} to remove {amount}");
             return false;
+        }
 
-        resources[type] -= amount;
-        Debug.Log($"Removed {amount} {type}. Remaining: {resources[type]}");
+        int remaining = amount;
+
+        foreach (var slot in resources)
+        {
+            if (slot.type == type && slot.amount > 0)
+            {
+                int toRemove = Mathf.Min(slot.amount, remaining);
+                slot.amount -= toRemove;
+                remaining -= toRemove;
+
+                if (slot.amount <= 0) slot.amount = 0;
+                if (remaining <= 0) break;
+            }
+        }
+
+        // Remove empty slots at the end
+        resources.RemoveAll(s => s.amount <= 0);
+        AutoSortInventory();
+        UpdateResourcesUIText();
         return true;
     }
 
@@ -43,8 +159,15 @@ public class MJ_PlayerInventory : MonoBehaviour
 
     public int GetResourceAmount(ResourceType type)
     {
-        return resources.ContainsKey(type) ? resources[type] : 0;
+        int total = 0;
+        foreach (var slot in resources)
+        {
+            if (slot.type == type)
+                total += slot.amount;
+        }
+        return total;
     }
+
 
     void Update()
     {
@@ -53,27 +176,65 @@ public class MJ_PlayerInventory : MonoBehaviour
 
     void UpdateResourcesUIText()
     {
-        string displayText = "";
-
-        // Helper dictionary for short codes
-        Dictionary<ResourceType, string> shortCodes = new Dictionary<ResourceType, string>()
+        for (int i = 0; i < images.Count; i++)
         {
-            { ResourceType.Wood, "WO" },
-            { ResourceType.Stone, "ST" },
-            { ResourceType.Metal, "ME" },
-            { ResourceType.Coal, "CO" },
-            { ResourceType.Water, "WA" },
-            { ResourceType.Diesel, "DI" }
-        };
-
-        foreach (var kvp in shortCodes)
-        {
-            if (resources.ContainsKey(kvp.Key) && resources[kvp.Key] > 0)
+            if (i < resources.Count && !resources[i].IsEmpty)
             {
-                displayText += $"{resources[kvp.Key]}:{kvp.Value}\n";
+                images[i].sprite = GetSpriteForType(resources[i].type);
+                images[i].color = Color.white;
+                inventoryNumberDisplay[i].text = resources[i].amount.ToString();
+            }
+            else
+            {
+                images[i].sprite = null;
+                images[i].color = new Color(1, 1, 1, 0);
+                inventoryNumberDisplay[i].text = "";
+            }
+        }
+    }
+
+
+    private Sprite GetSpriteForType(ResourceType type)
+    {
+        switch (type)
+        {
+            case ResourceType.Wood: return woodSprite;
+            case ResourceType.Stone: return stoneSprite;
+            case ResourceType.Metal: return metalSprite;
+            case ResourceType.Coal: return coalSprite;
+            case ResourceType.Water: return waterSprite;
+            case ResourceType.Diesel: return dieselSprite;
+            default: return null;
+        }
+    }
+
+    private void AutoSortInventory()
+    {
+        // 1️⃣ Merge same-type stacks
+        for (int i = 0; i < resources.Count; i++)
+        {
+            if (resources[i].IsEmpty || resources[i].IsFull) continue;
+
+            for (int j = i + 1; j < resources.Count; j++)
+            {
+                if (resources[j].type == resources[i].type && !resources[j].IsEmpty)
+                {
+                    int space = 128 - resources[i].amount;
+                    int transfer = Mathf.Min(space, resources[j].amount);
+
+                    resources[i].amount += transfer;
+                    resources[j].amount -= transfer;
+
+                    if (resources[i].IsFull)
+                        break;
+                }
             }
         }
 
-        inventoryUItext.text = displayText; // Or whatever text field you want to use
+        // 2️⃣ Remove empty slots
+        resources.RemoveAll(s => s.IsEmpty);
+
+        // 3️⃣ Sort by resource type name for neatness
+        resources.Sort((a, b) => a.type.CompareTo(b.type));
     }
 }

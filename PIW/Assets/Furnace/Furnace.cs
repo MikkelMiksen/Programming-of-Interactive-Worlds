@@ -26,6 +26,11 @@ public class Furnace : MonoBehaviour, Iinteractable
 
     [SerializeField] private Light flameLight;
 
+    void Start()
+    {
+        fuels.Add(ResourceType.Diesel, 10);
+    }
+
     public void Interact()
     {
         if (!isUIOpen)
@@ -129,6 +134,5 @@ public class Furnace : MonoBehaviour, Iinteractable
             temperatureInfluence = (influenceRadius - Vector3.Distance(MJ_PlayerController.Instance.transform.position, transform.position)) / influenceRadius;
         else
             temperatureInfluence = 0f;
-
     }
 }

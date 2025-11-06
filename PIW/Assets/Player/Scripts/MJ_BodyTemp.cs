@@ -22,7 +22,7 @@ public class MJ_BodyTemp : MonoBehaviour
 
     void Start()
     {
-        currentAreaTemp = daynightcycle.Instance.temp;
+        currentAreaTemp = DayNightCycle.Instance.temp;
     }
 
     void Update()
@@ -33,7 +33,7 @@ public class MJ_BodyTemp : MonoBehaviour
 
     private void UpdateBodyTemperature()
     {
-        float environmentTemp = daynightcycle.Instance.temp;
+        float environmentTemp = currentAreaTemp;
 
         // Body temperature moves toward environment temperature gradually
         float delta = environmentTemp - bodyTemp;
