@@ -83,12 +83,6 @@ public class Furnace : MonoBehaviour, Iinteractable
 
     void Update()
     {
-
-        if (isBurningFuel)
-            flameLight.intensity = 25.02f;
-        else
-            flameLight.intensity = 0;
-
         if (!furnaceIsOn || !hasFuel) return;
 
         // pick next fuel if none burning
@@ -97,8 +91,7 @@ public class Furnace : MonoBehaviour, Iinteractable
             foreach (var kvp in fuels)
             {
                 currentFuelType = kvp.Key;
-                currentUnitBurnTime = ResourceData.BurnProperties[currentFuelType].BurnTime /
-                                      ResourceData.BurnProperties[currentFuelType].BurnRate;
+                currentUnitBurnTime = ResourceData.BurnProperties[currentFuelType].BurnTime / ResourceData.BurnProperties[currentFuelType].BurnRate;
                 burnTimer = 0f;
                 isBurningFuel = true;
                 break;
@@ -130,9 +123,15 @@ public class Furnace : MonoBehaviour, Iinteractable
             Debug.Log("🔥 Furnace stopped — no more fuel.");
         }
 
-        if(isBurningFuel)
+        if (isBurningFuel)
+        {
             temperatureInfluence = (influenceRadius - Vector3.Distance(MJ_PlayerController.Instance.transform.position, transform.position)) / influenceRadius;
+            flameLight.intensity = 25.02f;
+        }
         else
+        {
             temperatureInfluence = 0f;
+            flameLight.intensity = 0;
+        }
     }
 }

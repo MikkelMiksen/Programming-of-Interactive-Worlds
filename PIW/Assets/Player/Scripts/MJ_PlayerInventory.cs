@@ -176,7 +176,7 @@ public class MJ_PlayerInventory : MonoBehaviour
 
     void UpdateResourcesUIText()
     {
-        for (int i = 0; i < images.Count; i++)
+        /*for (int i = 0; i < images.Count; i++)
         {
             if (i < resources.Count && !resources[i].IsEmpty)
             {
@@ -186,6 +186,29 @@ public class MJ_PlayerInventory : MonoBehaviour
             }
             else
             {
+                images[i].sprite = null;
+                images[i].color = new Color(1, 1, 1, 0);
+                inventoryNumberDisplay[i].text = "";
+            }
+        }*/
+
+        // ensure no mismatch causes issues
+        int slotCount = Mathf.Min(images.Count, inventoryNumberDisplay.Count);
+        int resourceCount = resources.Count;
+
+        for (int i = 0; i < slotCount; i++)
+        {
+            bool hasResource = i < resourceCount && resources[i] != null && !resources[i].IsEmpty;
+
+            if (hasResource)
+            {
+                images[i].sprite = GetSpriteForType(resources[i].type);
+                images[i].color = Color.white;
+                inventoryNumberDisplay[i].text = resources[i].amount.ToString();
+            }
+            else
+            {
+                // clear slot if no resource or no matching UI element
                 images[i].sprite = null;
                 images[i].color = new Color(1, 1, 1, 0);
                 inventoryNumberDisplay[i].text = "";

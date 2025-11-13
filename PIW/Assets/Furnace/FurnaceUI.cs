@@ -35,6 +35,8 @@ public class FurnaceUI : MonoBehaviour
         confirmButton.onClick.AddListener(OnConfirmClicked);
 
         OnResourceChanged(0); // initialize image
+
+        Hide();
     }
 
     private void OnResourceChanged(int index)

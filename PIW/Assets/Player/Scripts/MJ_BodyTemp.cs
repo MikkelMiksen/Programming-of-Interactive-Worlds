@@ -35,18 +35,25 @@ public class MJ_BodyTemp : MonoBehaviour
     {
         float environmentTemp = currentAreaTemp;
 
-        // Body temperature moves toward environment temperature gradually
+        // difference between body and environment
         float delta = environmentTemp - bodyTemp;
-        bodyTemp += delta * temperatureChangeRate * Time.deltaTime;
 
-        // Clamp within humanly possible limits
-        bodyTemp = Mathf.Clamp(bodyTemp, 14.3f, 45f);
+        // scale adjustment speed based on magnitude of difference
+        // this makes big gaps faster, small gaps slower
+        float adjustment = Mathf.Sign(delta) * Mathf.Pow(Mathf.Abs(delta), 1.3f);
+
+
+        // smooth approach with diminishing speed near extremes
+        bodyTemp += adjustment * temperatureChangeRate * Time.deltaTime;
+
+        // clamp to safe physiological limits
+        bodyTemp = Mathf.Clamp(bodyTemp, 19.8f, 45f);
     }
 
     private void CheckTemperatureEffects()
     {
         if (bodyTemp >= minSafeBodyTemp && bodyTemp <= maxSafeBodyTemp)
-        {
+        { // Temperature is safe
             readBodyTemp = $"Body temp: {bodyTemp:F1}°C";
             isBodyTempSafe = true;
             isBodyTempFreezing = false;
@@ -55,7 +62,7 @@ public class MJ_BodyTemp : MonoBehaviour
 
         }
         else if (bodyTemp <= minSafeBodyTemp)
-        {
+        { // Temperature is cold
             readBodyTemp = $"Hypothermia risk! Body temp: {bodyTemp:F1}°C";
             isBodyTempSafe = false;
             isBodyTempFreezing = true;
@@ -63,7 +70,7 @@ public class MJ_BodyTemp : MonoBehaviour
             hpInfluenceCoefficient = 0.96f;
         }
         else if (bodyTemp >= maxSafeBodyTemp)
-        {
+        { //Temperature is high
             readBodyTemp = $"Overheating risk! Body temp: {bodyTemp:F1}°C";
             isBodyTempSafe = false;
             isBodyTempFreezing = false;
