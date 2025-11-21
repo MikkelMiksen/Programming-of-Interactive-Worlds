@@ -47,7 +47,6 @@ public class MJ_PlayerInventory : MonoBehaviour
         foreach (var theImage in inventoryGlobalLayout.GetComponentsInChildren<Image>())
         {
             images.Add(theImage);
-
         }
         yield return new WaitForSeconds(.1f);
         foreach (var text in inventoryGlobalLayout.GetComponentsInChildren<TextMeshProUGUI>())
@@ -152,6 +151,26 @@ public class MJ_PlayerInventory : MonoBehaviour
         return true;
     }
 
+    public bool RemoveAllResources(List<RecipeSO.Ingredient> reqIngredients)
+    {
+        if (HasAllResources(reqIngredients))
+        {
+            foreach (var pair in reqIngredients)
+            {
+                RemoveResource(pair.type, pair.amount);
+            }
+            Debug.Log("Multiple resource removal : TRUE");
+            return true;
+        }
+        else
+        {
+            Debug.Log("Multiple resource removal : FALSE");
+            return false;
+        }
+
+
+    }
+
     public void ClearInventory()
     {
         resources.Clear();
@@ -168,7 +187,34 @@ public class MJ_PlayerInventory : MonoBehaviour
         return total;
     }
 
+    public bool HasResource(ResourceType type, int amount)
+    {
+        int total = 0;
 
+        foreach (var slot in resources)
+        {
+            if (slot.type == type)
+            {
+                total += slot.amount;
+                if (total >= amount)
+                    return true; // we already have enough
+            }
+        }
+
+        return false; // not enough in total
+    }
+
+    public bool HasAllResources(List<RecipeSO.Ingredient> required)
+    {
+        foreach (var pair in required)
+        {
+            if(!HasResource(pair.type, pair.amount))
+                return false;
+        }
+        return true;
+    }
+
+    
     void Update()
     {
         UpdateResourcesUIText();

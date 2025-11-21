@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 15852b2539ac0dc49a9850a9885726d4
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 178400
+  packageName: Modular Animated Wood Panel Kit - Vertical Wall - Destructible With
+    Visual Effect and Sound Effect
+  packageVersion: 1.0
+  assetPath: Assets/BigRookGames/Scripts/Build Panels/BasicWoodWallController.cs
+  uploadId: 388775

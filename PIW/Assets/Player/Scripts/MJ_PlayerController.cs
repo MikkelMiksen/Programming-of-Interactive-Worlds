@@ -34,7 +34,7 @@ public class MJ_PlayerController : MonoBehaviour
         promptDisplay.text = "";
     }
 
-    void Update()
+    void LateUpdate()
     {
         PlayerYawToCamAlign();
         Vector3 dir = UpdateInputAndDirection();

@@ -7,7 +7,9 @@ using UnityEngine;
         Metal,
         Coal,
         Water,
-        Diesel
+        Diesel,
+        RawMeat,
+        Food,
     }
 
     [System.Serializable]

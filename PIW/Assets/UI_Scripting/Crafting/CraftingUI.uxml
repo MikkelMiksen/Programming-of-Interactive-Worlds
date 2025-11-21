@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+>
+    <Style src="CraftingUIStyles.uss" />
+
+    <engine:VisualElement name="CraftingPanel" class="crafting-panel">
+
+        <engine:Label name="TitleLabel" text="Crafting" class="crafting-title" />
+
+        <engine:DropdownField
+            name="RecipeDropdown"
+            class="recipe-dropdown"
+            choices="[]" />
+
+        <engine:Label
+            name="IngredientsLabel"
+            text="Requires:"
+            class="ingredients-label" />
+
+        <engine:Button
+            name="CraftButton"
+            text="Craft"
+            class="craft-button" />
+
+        <engine:Button
+            name="CloseButton"
+            text="X"
+            class="close-button" />
+
+    </engine:VisualElement>
+</engine:UXML>

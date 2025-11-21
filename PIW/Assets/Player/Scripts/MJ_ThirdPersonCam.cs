@@ -35,7 +35,7 @@ public class MJ_ThirdPersonCam : MonoBehaviour
         pitch = angles.x;
     }
 
-    void LateUpdate()
+    void Update()
     {
         HandleRotation();
         HandleZoom();
