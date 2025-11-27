@@ -10,13 +10,16 @@ public class InventorySlot
     public ResourceType type;
     public int amount;
 
+    public int durability;
+
     public bool IsEmpty => amount <= 0;
     public bool IsFull => amount >= 128;
 
-    public InventorySlot(ResourceType type, int amount)
+    public InventorySlot(ResourceType type, int amount, int durability = 0)
     {
         this.type = type;
         this.amount = amount;
+        this.durability = durability;
     }
 }
 
@@ -33,7 +36,13 @@ public class MJ_PlayerInventory : MonoBehaviour
 
     [SerializeField] GameObject inventoryGlobalLayout;
 
-    [SerializeField] private Sprite woodSprite, stoneSprite, metalSprite, coalSprite, waterSprite, dieselSprite;
+    [SerializeField] private Sprite woodSprite,
+        stoneSprite, metalSprite,
+        coalSprite, waterSprite,
+        dieselSprite, rawMeatSprite,
+        cookedMeatSprite, berriesSprite,
+        stoneAxeSprite, stonePickaxeSprite;
+
     private int numOfInventorySlots = 88;
 
     void Awake()
@@ -55,8 +64,26 @@ public class MJ_PlayerInventory : MonoBehaviour
         }
     }
 
-    public void AddResource(ResourceType type, int amount)
+    public void AddResource(ResourceType type, int amount, int durability = 0)
     {
+
+        var cat = GetCategory(type);
+
+        if (cat == ItemCategory.Tool)
+        {
+            // Tools don't stack; add 'amount' times as separate slots but each with amount=1
+            int toAdd = amount;
+            while (toAdd > 0 && resources.Count < numOfInventorySlots)
+            {
+                resources.Add(new InventorySlot(type, 1, durability));
+                toAdd--;
+            }
+            if (toAdd > 0) Debug.LogWarning("Inventory full, couldn't add all tools");
+            AutoSortInventory();
+            UpdateResourcesUIText();
+            return;
+        }
+
         int remaining = amount;
 
         // Fill existing stacks first
@@ -92,6 +119,45 @@ public class MJ_PlayerInventory : MonoBehaviour
         UpdateResourcesUIText();
     }
 
+    public List<(ResourceType type, int count)> GetConsumablesList()
+    {
+        Dictionary<ResourceType, int> map = new Dictionary<ResourceType, int>();
+        foreach (var slot in resources)
+        {
+            if (GetCategory(slot.type) != ItemCategory.Consumable) continue;
+            if (!map.ContainsKey(slot.type)) map[slot.type] = 0;
+            map[slot.type] += slot.amount;
+        }
+
+        var list = new List<(ResourceType, int)>();
+        foreach (var kv in map) list.Add((kv.Key, kv.Value));
+        return list;
+    }
+
+    public List<InventorySlot> GetToolsList()
+    {
+        var list = new List<InventorySlot>();
+        foreach (var s in resources)
+            if (GetCategory(s.type) == ItemCategory.Tool)
+                list.Add(s);
+        return list;
+    }
+
+
+    public ItemCategory GetCategory(ResourceType t)
+    {
+        switch (t)
+        {
+            case ResourceType.StoneAxe:
+            case ResourceType.StonePickaxe:
+                return ItemCategory.Tool;
+            case ResourceType.CookedMeat:
+            case ResourceType.Berries:
+                return ItemCategory.Consumable;
+            default:
+                return ItemCategory.Material;
+        }
+    }
 
     private void MergeStacks(ResourceType type)
     {
@@ -263,7 +329,7 @@ public class MJ_PlayerInventory : MonoBehaviour
     }
 
 
-    private Sprite GetSpriteForType(ResourceType type)
+    public Sprite GetSpriteForType(ResourceType type)
     {
         switch (type)
         {
@@ -273,6 +339,11 @@ public class MJ_PlayerInventory : MonoBehaviour
             case ResourceType.Coal: return coalSprite;
             case ResourceType.Water: return waterSprite;
             case ResourceType.Diesel: return dieselSprite;
+            case ResourceType.RawMeat: return rawMeatSprite;
+            case ResourceType.CookedMeat: return cookedMeatSprite;
+            case ResourceType.Berries: return berriesSprite;
+            case ResourceType.StoneAxe: return stoneAxeSprite;
+            case ResourceType.StonePickaxe: return stonePickaxeSprite;
             default: return null;
         }
     }

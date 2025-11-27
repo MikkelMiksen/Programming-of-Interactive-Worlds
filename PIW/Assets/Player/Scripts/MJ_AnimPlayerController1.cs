@@ -2,12 +2,14 @@ using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class MJ_PlayerController : MonoBehaviour
+public class MJ_AnimPlayerController : MonoBehaviour
 {
-    public static MJ_PlayerController Instance; void Awake() => Instance = this;
+    public static MJ_AnimPlayerController Instance; void Awake() => Instance = this;
 
     [SerializeField]
     private float _speed = 5f, interactionDistance = 5f;
+
+    [SerializeField] private Animator _animator;
 
     float horizontal, vertical, promptTime = 3f, elapsedTime, distToNearestInteractable;
 
@@ -24,7 +26,14 @@ public class MJ_PlayerController : MonoBehaviour
     private Iinteractable nearestIinteractable = null;
     private Collider nearestHit;
 
+    [SerializeField]
+    private bool wasMoving = false;
 
+    private readonly string isIdle = "IsIdle";
+    private  readonly string isWalkingForward = "IsWalkingForward";
+    private readonly string isWalkingLeft = "IsWalkingLeft";
+    private readonly string isWalkingRight = "IsWalkingRight";
+    private readonly string isWalkingBackwards = "IsWalkingBackwards";
 
     void Start()
     {
@@ -33,6 +42,11 @@ public class MJ_PlayerController : MonoBehaviour
         promptIsShowing = false;
         prompt = null;
         promptDisplay.text = "";
+        // _animator.SetBool(isIdle, true);
+        // _animator.SetBool(isWalkingForward, false);
+        // _animator.SetBool(isWalkingLeft, false);
+        // _animator.SetBool(isWalkingRight, false);
+        // _animator.SetBool(isWalkingBackwards, false);
     }
 
     void LateUpdate()
@@ -153,6 +167,51 @@ public class MJ_PlayerController : MonoBehaviour
         camRight.Normalize();
 
         Vector3 dir = (camForward * vertical + camRight * horizontal).normalized;
+        //HandleMovementAnimations(horizontal, vertical);
         return dir;
+    }
+
+    void HandleMovementAnimations(float h, float v)
+    {
+        bool forward  = v >  0.1f;
+        bool backward = v < -0.1f;
+        bool left     = h < -0.1f;
+        bool right    = h >  0.1f;
+
+        bool isMoving = forward || backward || left || right;
+
+        // -------------------------------
+        // Start/Stop helper animation logic
+        // -------------------------------
+        if (!wasMoving && isMoving)
+        {
+            _animator.SetTrigger("startWalk");
+        }
+        else if (wasMoving && !isMoving)
+        {
+            _animator.SetTrigger("stopWalk");
+        }
+
+        wasMoving = isMoving;
+
+        // -------------------------------
+        // Set state booleans
+        // -------------------------------
+        _animator.SetBool(isIdle, !isMoving);
+
+        _animator.SetBool(isWalkingForward,   forward  && !left && !right);
+        _animator.SetBool(isWalkingBackwards, backward && !left && !right);
+
+        _animator.SetBool(isWalkingLeft,   left  && !forward && !backward);
+        _animator.SetBool(isWalkingRight,  right && !forward && !backward);
+
+        // -------------------------------
+        // Diagonal priority (Forward wins)
+        // -------------------------------
+        if (forward)
+        {
+            _animator.SetBool(isWalkingLeft,  false);
+            _animator.SetBool(isWalkingRight, false);
+        }
     }
 }

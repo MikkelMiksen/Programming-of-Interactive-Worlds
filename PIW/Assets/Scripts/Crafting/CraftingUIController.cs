@@ -6,91 +6,127 @@ public class CraftingUIController : MonoBehaviour
 {
     public static CraftingUIController Instance;
 
-    [SerializeField] private UIDocument uiDocument;
-    [SerializeField] private List<RecipeSO> availableRecipes = new();
-
+    private VisualElement root;          // Reference to UXML root
     private DropdownField recipeDropdown;
-    private Label ingredientsLabel;
+    private Label ingredientLabel;
     private Button craftButton;
     private Button closeButton;
+
+    private Iinteractable currentStation;        // <-- your missing field
+    private List<RecipeSO> currentRecipes;       // recipes passed in
 
     private void Awake()
     {
         Instance = this;
-    }
 
-    private void Start()
-    {
-        var root = uiDocument.rootVisualElement;
+        // Load UIDocument
+        var uiDoc = GetComponent<UIDocument>();
+        root = uiDoc.rootVisualElement;
 
+        // Start hidden
+        root.style.display = DisplayStyle.None;
+
+        // Link UI elements
         recipeDropdown = root.Q<DropdownField>("RecipeDropdown");
-        ingredientsLabel = root.Q<Label>("IngredientsLabel");
+        ingredientLabel = root.Q<Label>("IngredientsLabel");
         craftButton = root.Q<Button>("CraftButton");
         closeButton = root.Q<Button>("CloseButton");
 
-        root.style.display = DisplayStyle.None;
-
-        root.schedule.Execute(() => {
-            InitDropdown();
-            HookEvents();
-        });
+        craftButton.clicked += CraftSelectedRecipe;
+        closeButton.clicked += () => root.style.display = DisplayStyle.None;
     }
 
-    void InitDropdown()
+    // ---------------------------------------------------------------------
+    //  SHOW UI (called from Workbench / Campfire / Refinery)
+    // ---------------------------------------------------------------------
+    public void ShowUI(Iinteractable station, List<RecipeSO> recipes)
+    {
+        currentStation = station;
+        currentRecipes = recipes;
+
+        RefreshRecipeDropdown();                  // <-- your missing method
+        root.style.display = DisplayStyle.Flex;
+    }
+
+    // ---------------------------------------------------------------------
+    //  POPULATE DROPDOWN
+    // ---------------------------------------------------------------------
+    private void RefreshRecipeDropdown()
     {
         recipeDropdown.choices = new List<string>();
 
-        foreach (var recipe in availableRecipes)
-        {
-            recipeDropdown.choices.Add(recipe.recipeName);
-        }
+        foreach (var r in currentRecipes)
+            recipeDropdown.choices.Add(r.recipeName);
 
-        if (recipeDropdown.choices.Count > 0)
-            recipeDropdown.index = 0;
+        recipeDropdown.index = 0;
 
-        UpdateIngredientPreview();
+        UpdateIngredientDisplay();
+        recipeDropdown.RegisterValueChangedCallback(evt => UpdateIngredientDisplay());
     }
 
-    void HookEvents()
+    // ---------------------------------------------------------------------
+    //  SHOW REQUIRED INGREDIENTS
+    // ---------------------------------------------------------------------
+    private void UpdateIngredientDisplay()
     {
-        recipeDropdown.RegisterValueChangedCallback(evt =>
-        {
-            UpdateIngredientPreview();
-        });
+        if (recipeDropdown.index < 0 || recipeDropdown.index >= currentRecipes.Count)
+            return;
 
-        craftButton.clicked += CraftSelectedRecipe;
-        closeButton.clicked += () => ShowUI(false);
-    }
+        var recipe = currentRecipes[recipeDropdown.index];
+        var text = "Requires:\n";
 
-    void UpdateIngredientPreview()
-    {
-        if (recipeDropdown.index < 0) return;
-
-        var recipe = availableRecipes[recipeDropdown.index];
-
-        string text = "Requires:\n";
         foreach (var ing in recipe.ingredients)
-            text += $"{ing.type}: {ing.amount}\n";
+            text += $"{ing.amount} × {ing.type}\n";
 
-        ingredientsLabel.text = text;
+        ingredientLabel.text = text;
     }
 
-    void CraftSelectedRecipe()
+    // ---------------------------------------------------------------------
+    //  CRAFTING
+    // ---------------------------------------------------------------------
+    private void CraftSelectedRecipe()
     {
-        var recipe = availableRecipes[recipeDropdown.index];
+        if (recipeDropdown.index < 0 || recipeDropdown.index >= currentRecipes.Count)
+            return;
 
-        if (MJ_PlayerInventory.Instance.RemoveAllResources(recipe.ingredients))
-        {
-            MJ_PlayerInventory.Instance.AddResource(recipe.outputItem, recipe.outputAmount);
-        }
-        else
+        var recipe = currentRecipes[recipeDropdown.index];
+        var inv = MJ_PlayerInventory.Instance;
+
+        // Check required items
+        if (!inv.HasAllResources(recipe.ingredients))
         {
             Debug.Log("❌ Not enough materials!");
+            return;
         }
-    }
 
-    public void ShowUI(bool show)
-    {
-        uiDocument.rootVisualElement.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+        // Consume + give result
+        inv.RemoveAllResources(recipe.ingredients);
+
+        if (recipe.outputCategory == ItemCategory.Tool)
+        {
+            // Tools are non-stackable and may use durability
+            MJ_PlayerInventory.Instance.AddResource(
+                recipe.outputItem,
+                recipe.outputAmount,
+                recipe.toolDurability
+            );
+        }
+        else if (recipe.outputCategory == ItemCategory.Consumable)
+        {
+            // Foods and other consumables simply stack normally
+            MJ_PlayerInventory.Instance.AddResource(
+                recipe.outputItem,
+                recipe.outputAmount
+            );
+        }
+        else // Material / Default
+        {
+            MJ_PlayerInventory.Instance.AddResource(
+                recipe.outputItem,
+                recipe.outputAmount
+            );
+        }
+
+        Debug.Log($"✔ Crafted {recipe.outputAmount} × {recipe.outputItem}");
     }
 }

@@ -19,6 +19,7 @@ public class Furnace : MonoBehaviour, Iinteractable
     private float burnTimer = 0f;
     private float currentUnitBurnTime = 0f;
     public float totalHeatOutput = 0f;
+    private Material fireMat;
 
     [SerializeField] private float influenceRadius = 25f, heatMultiplier = 1f;
 
@@ -123,15 +124,23 @@ public class Furnace : MonoBehaviour, Iinteractable
             Debug.Log("🔥 Furnace stopped — no more fuel.");
         }
 
+        GameObject fire = GameObject.Find("Fire");
         if (isBurningFuel)
         {
             temperatureInfluence = (influenceRadius - Vector3.Distance(MJ_PlayerController.Instance.transform.position, transform.position)) / influenceRadius;
             flameLight.intensity = 25.02f;
+            Color tmpCol = fire.GetComponent<MeshRenderer>().material.color;
+            tmpCol.a = 255;
+            fire.GetComponent<MeshRenderer>().material.color = tmpCol;
+
         }
         else
         {
             temperatureInfluence = 0f;
             flameLight.intensity = 0;
+            Color tmpCol = fire.GetComponent<MeshRenderer>().material.color;
+            tmpCol.a = 0;
+            fire.GetComponent<MeshRenderer>().material.color = tmpCol;
         }
     }
 }
