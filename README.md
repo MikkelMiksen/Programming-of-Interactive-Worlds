@@ -453,7 +453,7 @@ Planned expansions:
 
 # 🏁 CREDITS
 
-- **Developer:** Miokkel Emil Weber Juel, creator of *PIW - Dieselpunk Survival Ou8tpost*
+- **Developer:** Mikkel Emil Weber Juel, creator of *PIW - Dieselpunk Survival Ou8tpost*
 - **Engine:** Unity 6
 - **UI:** TextMeshPro, UI Toolkit
 - **Art & Design:** MiksenDesigns :
