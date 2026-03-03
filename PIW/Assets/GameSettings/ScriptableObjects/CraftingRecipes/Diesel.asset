@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Diesel
   m_EditorClassIdentifier: 
   recipeName: Diesel
-  outputItem: 0
+  outputItem: 5
+  outputCategory: 0
   outputAmount: 1
+  outputPrefab: {fileID: 0}
+  toolDurability: 0
   ingredients:
-  - type: 0
-    amount: 0
-  - type: 0
-    amount: 0
+  - type: 7
+    amount: 15
+  requiredStation: 3

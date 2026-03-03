@@ -41,7 +41,8 @@ public class MJ_PlayerInventory : MonoBehaviour
         coalSprite, waterSprite,
         dieselSprite, rawMeatSprite,
         cookedMeatSprite, berriesSprite,
-        stoneAxeSprite, stonePickaxeSprite;
+        stoneAxeSprite, stonePickaxeSprite,
+        crudeOilSprite;
 
     private int numOfInventorySlots = 88;
 
@@ -344,6 +345,7 @@ public class MJ_PlayerInventory : MonoBehaviour
             case ResourceType.Berries: return berriesSprite;
             case ResourceType.StoneAxe: return stoneAxeSprite;
             case ResourceType.StonePickaxe: return stonePickaxeSprite;
+            case ResourceType.CrudeOil: return crudeOilSprite;
             default: return null;
         }
     }

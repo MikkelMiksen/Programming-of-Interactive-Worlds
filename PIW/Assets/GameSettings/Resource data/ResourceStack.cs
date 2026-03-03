@@ -10,6 +10,7 @@ using UnityEngine;
         Water, // Sprite is added to GetSpriteForType()
         Diesel, // Sprite is added to GetSpriteForType()
         RawMeat, // Sprite is added to GetSpriteForType()
+        CrudeOil, // Missing sprite
         //Consumables
         CookedMeat, // Sprite is added to GetSpriteForType()
         Berries, // Sprite is added to GetSpriteForType()
