@@ -187,7 +187,7 @@ IsBurnable
 
   * HeatOutput
 
-- urnace UI toggles via interaction system
+- Furnace UI toggles via interaction system
 
 - Furnace affects **local environmental temperature**
 
